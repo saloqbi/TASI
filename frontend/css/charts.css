@@ -1,0 +1,227 @@
+/* أنماط صفحة الرسوم البيانية - تحديث */
+.charts-page {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #131722;
+}
+
+.charts-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+    background-color: #1e222d;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.chart-controls-container {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 20px;
+    flex-grow: 1;
+    justify-content: center;
+}
+
+.toolbar-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.toolbar-section label {
+    font-size: 14px;
+    color: #9598a1;
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+.chart-selector, .indicator-selector {
+    background-color: #2a2e39;
+    color: #e0e3eb;
+    border: 1px solid #363c4e;
+    padding: 8px 12px;
+    border-radius: 5px;
+    min-width: 120px;
+    font-size: 14px;
+}
+
+.timeframe-selector, .chart-type-selector {
+    display: flex;
+    gap: 2px;
+    flex-direction: row;
+}
+
+.timeframe-button, .chart-type-button {
+    background-color: #2a2e39;
+    color: #e0e3eb;
+    border: 1px solid #363c4e;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    font-size: 14px;
+}
+
+.timeframe-button:hover, .chart-type-button:hover {
+    background-color: #363c4e;
+}
+
+.timeframe-button.active, .chart-type-button.active {
+    background-color: #2962ff;
+    border-color: #2962ff;
+    color: white;
+}
+
+.indicator-button {
+    background-color: #2a2e39;
+    color: #e0e3eb;
+    border: 1px solid #363c4e;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 14px;
+    position: relative;
+}
+
+.indicator-button:hover {
+    background-color: #363c4e;
+}
+
+.indicator-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #2a2e39;
+    border: 1px solid #363c4e;
+    border-radius: 5px;
+    z-index: 1000;
+    min-width: 150px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.indicator-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.indicator-item:hover {
+    background-color: #363c4e;
+}
+
+.drawing-tools-section {
+    margin-left: auto;
+}
+
+.drawing-tools-container {
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+}
+
+.drawing-tool-button {
+    background-color: #2a2e39;
+    color: #e0e3eb;
+    border: 1px solid #363c4e;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.drawing-tool-button:hover {
+    background-color: #363c4e;
+}
+
+.drawing-tool-button.active {
+    background-color: #2962ff;
+    border-color: #2962ff;
+    color: white;
+}
+
+.active-indicators {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.indicator-tag {
+    display: flex;
+    align-items: center;
+    background-color: #2a2e39;
+    color: #e0e3eb;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    border: 1px solid #363c4e;
+}
+
+.remove-indicator {
+    background: none;
+    border: none;
+    color: #ff6b6b;
+    margin-right: 5px;
+    margin-left: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0;
+}
+
+.chart-container {
+    flex-grow: 1;
+    min-height: 700px; /* زيادة الارتفاع من 650 إلى 700 */
+    background-color: #131722;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #2a2e39;
+    width: 100%; /* ضمان استخدام العرض الكامل */
+}
+
+/* تحسينات للأجهزة المحمولة */
+@media (max-width: 992px) {
+    .chart-controls-container {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .toolbar-section {
+        margin-bottom: 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .timeframe-button, .chart-type-button {
+        padding: 8px 5px;
+        font-size: 12px;
+    }
+    
+    .chart-container {
+        min-height: 500px; /* زيادة الارتفاع للأجهزة المحمولة من 450 إلى 500 */
+    }
+    
+    .drawing-tool-button {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+    
+    .chart-controls-container {
+        flex-direction: column;
+        align-items: center;
+    }
+}

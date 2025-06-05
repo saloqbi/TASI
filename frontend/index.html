@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>كوكبة تاسي لسحر الأرقام والتوصيات الذكية</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/charts.css">
+    <link rel="stylesheet" href="css/patterns.css">
+    <link rel="stylesheet" href="css/calendar.css">
+    <link rel="stylesheet" href="css/settings.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment/moment.min.js"></script>
+    <script src="https://s3.tradingview.com/tv.js"></script>
+</head>
+<body>
+    <!-- صفحة تسجيل الدخول -->
+    <div id="login-page" class="login-container">
+        <div class="login-form-container">
+            <div class="login-logo">
+                <img src="assets/images/logo.png" alt="كوكبة تاسي لسحر الأرقام والتوصيات الذكية">
+                <h1>كوكبة تاسي</h1>
+                <p>لسحر الأرقام والتوصيات الذكية</p>
+            </div>
+            <form id="login-form" class="login-form">
+                <div class="form-group">
+                    <label for="email">البريد الإلكتروني</label>
+                    <input type="email" id="email" class="form-control" placeholder="أدخل البريد الإلكتروني" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">كلمة المرور</label>
+                    <div class="password-input">
+                        <input type="password" id="password" class="form-control" placeholder="أدخل كلمة المرور" required>
+                        <i class="fas fa-eye-slash toggle-password"></i>
+                    </div>
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="remember">
+                    <label class="form-check-label" for="remember">تذكرني</label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">تسجيل الدخول</button>
+                <div class="login-links">
+                    <a href="#">نسيت كلمة المرور؟</a>
+                    <a href="#">إنشاء حساب جديد</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- التطبيق الرئيسي -->
+    <div id="main-app" class="main-container" style="display: none;">
+        <!-- القائمة الجانبية -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="assets/images/logo.png" alt="كوكبة تاسي">
+                <h2>كوكبة تاسي</h2>
+            </div>
+            <div class="sidebar-menu">
+                <div class="nav-item active" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>لوحة التحكم</span>
+                </div>
+                <div class="nav-item" data-page="signals">
+                    <i class="fas fa-signal"></i>
+                    <span>الإشارات</span>
+                </div>
+                <div class="nav-item" data-page="charts">
+                    <i class="fas fa-chart-line"></i>
+                    <span>الرسوم البيانية</span>
+                </div>
+                <div class="nav-item" data-page="patterns">
+                    <i class="fas fa-shapes"></i>
+                    <span>الأنماط</span>
+                </div>
+                <div class="nav-item" data-page="calendar">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>التقويم الاقتصادي</span>
+                </div>
+                <div class="nav-item" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>الإعدادات</span>
+                </div>
+            </div>
+            <div class="sidebar-footer">
+                <div id="logout-btn" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>تسجيل الخروج</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- المحتوى الرئيسي -->
+        <div class="main-content">
+            <!-- لوحة التحكم -->
+            <div id="dashboard-page" class="page-content">
+                <div class="page-header">
+                    <h1>لوحة التحكم</h1>
+                    <div class="user-info">
+                        <span class="user-name">مرحباً، المستخدم</span>
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-signal"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>إجمالي الإشارات</h3>
+                            <p>1,250</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>الإشارات الناجحة</h3>
+                            <p>1,050</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>نسبة النجاح</h3>
+                            <p>84%</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>الأنماط المكتشفة</h3>
+                            <p>325</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-charts">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>أداء الإشارات</h3>
+                            <div class="chart-actions">
+                                <button class="btn-filter">
+                                    <i class="fas fa-filter"></i>
+                                </button>
+                                <button class="btn-refresh">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="signals-performance-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>توزيع الإشارات</h3>
+                            <div class="chart-actions">
+                                <button class="btn-filter">
+                                    <i class="fas fa-filter"></i>
+                                </button>
+                                <button class="btn-refresh">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="chart-body chart-row">
+                            <div class="chart-col">
+                                <canvas id="signals-type-chart"></canvas>
+                            </div>
+                            <div class="chart-col">
+                                <canvas id="signals-pair-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-market">
+                    <div class="market-header">
+                        <h3>أسعار العملات</h3>
+                        <div class="market-actions">
+                            <button class="btn-refresh">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="market-body">
+                        <div class="currency-pair">
+                            <div class="pair-info">
+                                <span class="pair-name">EUR/USD</span>
+                                <span class="pair-price price-up">1.1842 <i class="fas fa-caret-up"></i></span>
+                            </div>
+                            <div class="pair-change">
+                                <span class="change-value up">+0.0012</span>
+                                <span class="change-percent up">+0.10%</span>
+                            </div>
+                        </div>
+                        <div class="currency-pair">
+                            <div class="pair-info">
+                                <span class="pair-name">GBP/USD</span>
+                                <span class="pair-price price-down">1.3765 <i class="fas fa-caret-down"></i></span>
+                            </div>
+                            <div class="pair-change">
+                                <span class="change-value down">-0.0023</span>
+                                <span class="change-percent down">-0.17%</span>
+                            </div>
+                        </div>
+                        <div class="currency-pair">
+                            <div class="pair-info">
+                                <span class="pair-name">USD/JPY</span>
+                                <span class="pair-price price-up">110.32 <i class="fas fa-caret-up"></i></span>
+                            </div>
+                            <div class="pair-change">
+                                <span class="change-value up">+0.15</span>
+                                <span class="change-percent up">+0.14%</span>
+                            </div>
+                        </div>
+                        <div class="currency-pair">
+                            <div class="pair-info">
+                                <span class="pair-name">AUD/USD</span>
+                                <span class="pair-price price-up">0.7456 <i class="fas fa-caret-up"></i></span>
+                            </div>
+                            <div class="pair-change">
+                                <span class="change-value up">+0.0008</span>
+                                <span class="change-percent up">+0.11%</span>
+                            </div>
+                        </div>
+                        <div class="currency-pair">
+                            <div class="pair-info">
+                                <span class="pair-name">USD/CAD</span>
+                                <span class="pair-price price-down">1.2534 <i class="fas fa-caret-down"></i></span>
+                            </div>
+                            <div class="pair-change">
+                                <span class="change-value down">-0.0015</span>
+                                <span class="change-percent down">-0.12%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-recent">
+                    <div class="recent-header">
+                        <h3>أحدث الإشارات</h3>
+                        <a href="#" class="view-all">عرض الكل</a>
+                    </div>
+                    <div class="recent-body">
+                        <table class="signals-table">
+                            <thead>
+                                <tr>
+                                    <th>الزوج</th>
+                                    <th>النوع</th>
+                                    <th>السعر</th>
+                                    <th>الهدف</th>
+                                    <th>وقف الخسارة</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>EUR/USD</td>
+                                    <td><span class="signal-type buy">شراء</span></td>
+                                    <td>1.1842</td>
+                                    <td>1.1900</td>
+                                    <td>1.1800</td>
+                                    <td><span class="signal-status active">نشط</span></td>
+                                    <td>
+                                        <button class="btn-details">تفاصيل</button>
+                                        <button class="btn-close">إغلاق</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>GBP/USD</td>
+                                    <td><span class="signal-type sell">بيع</span></td>
+                                    <td>1.3765</td>
+                                    <td>1.3700</td>
+                                    <td>1.3800</td>
+                                    <td><span class="signal-status active">نشط</span></td>
+                                    <td>
+                                        <button class="btn-details">تفاصيل</button>
+                                        <button class="btn-close">إغلاق</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>USD/JPY</td>
+                                    <td><span class="signal-type buy">شراء</span></td>
+                                    <td>110.32</td>
+                                    <td>110.80</td>
+                                    <td>110.00</td>
+                                    <td><span class="signal-status completed">مكتمل</span></td>
+                                    <td>
+                                        <button class="btn-details">تفاصيل</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- صفحة الإشارات -->
+            <div id="signals-page" class="page-content" style="display: none;">
+                <div class="page-header">
+                    <h1>الإشارات</h1>
+                    <div class="user-info">
+                        <span class="user-name">مرحباً، المستخدم</span>
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="signals-filters">
+                    <div class="filter-group">
+                        <label for="pair-filter">الزوج</label>
+                        <select id="pair-filter" class="form-select">
+                            <option value="all">الكل</option>
+                            <option value="EURUSD">EUR/USD</option>
+                            <option value="GBPUSD">GBP/USD</option>
+                            <option value="USDJPY">USD/JPY</option>
+                            <option value="AUDUSD">AUD/USD</option>
+                            <option value="USDCAD">USD/CAD</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="type-filter">النوع</label>
+                        <select id="type-filter" class="form-select">
+                            <option value="all">الكل</option>
+                            <option value="buy">شراء</option>
+                            <option value="sell">بيع</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="status-filter">الحالة</label>
+                        <select id="status-filter" class="form-select">
+                            <option value="all">الكل</option>
+                            <option value="active">نشط</option>
+                            <option value="completed">مكتمل</option>
+                            <option value="cancelled">ملغي</option>
+                        </select>
+                    </div>
+                    <button class="btn-apply-filter">تطبيق</button>
+                </div>
+                
+                <div class="signals-list">
+                    <table class="signals-table">
+                        <thead>
+                            <tr>
+                                <th>الزوج</th>
+                                <th>النوع</th>
+                                <th>السعر</th>
+                                <th>الهدف</th>
+                                <th>وقف الخسارة</th>
+                                <th>الوقت</th>
+                                <th>الحالة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>EUR/USD</td>
+                                <td><span class="signal-type buy">شراء</span></td>
+                                <td>1.1842</td>
+                                <td>1.1900</td>
+                                <td>1.1800</td>
+                                <td>10:30</td>
+                                <td><span class="signal-status active">نشط</span></td>
+                                <td>
+                                    <button class="btn-details">تفاصيل</button>
+                                    <button class="btn-close">إغلاق</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>GBP/USD</td>
+                                <td><span class="signal-type sell">بيع</span></td>
+                                <td>1.3765</td>
+                                <td>1.3700</td>
+                                <td>1.3800</td>
+                                <td>09:45</td>
+                                <td><span class="signal-status active">نشط</span></td>
+                                <td>
+                                    <button class="btn-details">تفاصيل</button>
+                                    <button class="btn-close">إغلاق</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>USD/JPY</td>
+                                <td><span class="signal-type buy">شراء</span></td>
+                                <td>110.32</td>
+                                <td>110.80</td>
+                                <td>110.00</td>
+                                <td>08:15</td>
+                                <td><span class="signal-status completed">مكتمل</span></td>
+                                <td>
+                                    <button class="btn-details">تفاصيل</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>AUD/USD</td>
+                                <td><span class="signal-type buy">شراء</span></td>
+                                <td>0.7456</td>
+                                <td>0.7500</td>
+                                <td>0.7420</td>
+                                <td>07:30</td>
+                                <td><span class="signal-status completed">مكتمل</span></td>
+                                <td>
+                                    <button class="btn-details">تفاصيل</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>USD/CAD</td>
+                                <td><span class="signal-type sell">بيع</span></td>
+                                <td>1.2534</td>
+                                <td>1.2480</td>
+                                <td>1.2570</td>
+                                <td>06:45</td>
+                                <td><span class="signal-status cancelled">ملغي</span></td>
+                                <td>
+                                    <button class="btn-details">تفاصيل</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="signals-stats">
+                    <div class="stats-header">
+                        <h3>إحصائيات الإشارات</h3>
+                    </div>
+                    <div class="stats-body">
+                        <div class="stats-row">
+                            <div class="stats-card">
+                                <div class="stats-title">إجمالي الإشارات</div>
+                                <div class="stats-value">1,250</div>
+                            </div>
+                            <div class="stats-card">
+                                <div class="stats-title">الإشارات الناجحة</div>
+                                <div class="stats-value">1,050</div>
+                            </div>
+                            <div class="stats-card">
+                                <div class="stats-title">نسبة النجاح</div>
+                                <div class="stats-value">84%</div>
+                            </div>
+                            <div class="stats-card">
+                                <div class="stats-title">متوسط الربح</div>
+                                <div class="stats-value">45 نقطة</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- صفحة الرسوم البيانية -->
+            <div id="charts-page" class="page-content" style="display: none;">
+                <div class="page-header">
+                    <h1>الرسوم البيانية</h1>
+                    <div class="user-info">
+                        <span class="user-name">مرحباً، المستخدم</span>
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-controls">
+                    <div class="control-group">
+                        <label for="chart-pair">الزوج</label>
+                        <select id="chart-pair" class="form-select">
+                            <option value="EURUSD">EUR/USD</option>
+                            <option value="GBPUSD">GBP/USD</option>
+                            <option value="USDJPY">USD/JPY</option>
+                            <option value="AUDUSD">AUD/USD</option>
+                            <option value="USDCAD">USD/CAD</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>الإطار الزمني</label>
+                        <div class="btn-group">
+                            <button data-timeframe="1m" class="btn-timeframe">1د</button>
+                            <button data-timeframe="5m" class="btn-timeframe">5د</button>
+                            <button data-timeframe="15m" class="btn-timeframe">15د</button>
+                            <button data-timeframe="1h" class="btn-timeframe active">1س</button>
+                            <button data-timeframe="4h" class="btn-timeframe">4س</button>
+                            <button data-timeframe="1d" class="btn-timeframe">يوم</button>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label>نوع الرسم</label>
+                        <div class="btn-group">
+                            <button data-charttype="candle" class="btn-charttype active">شموع</button>
+                            <button data-charttype="line" class="btn-charttype">خط</button>
+                            <button data-charttype="bar" class="btn-charttype">أعمدة</button>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <button id="add-indicator" class="btn-add-indicator">
+                            <i class="fas fa-plus"></i> إضافة مؤشر
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="chart-container-tv">
+                    <div id="tradingview-chart"></div>
+                </div>
+                
+                <div class="chart-tools">
+                    <div class="tools-header">
+                        <h3>أدوات الرسم</h3>
+                    </div>
+                    <div class="tools-body">
+                        <div class="tool-group">
+                            <button class="btn-tool">
+                                <i class="fas fa-pen"></i>
+                                <span>رسم حر</span>
+                            </button>
+                            <button class="btn-tool">
+                                <i class="fas fa-arrows-alt-h"></i>
+                                <span>خط أفقي</span>
+                            </button>
+                            <button class="btn-tool">
+                                <i class="fas fa-long-arrow-alt-up"></i>
+                                <span>خط اتجاه</span>
+                            </button>
+                            <button class="btn-tool">
+                                <i class="fas fa-project-diagram"></i>
+                                <span>فيبوناتشي</span>
+                            </button>
+                            <button class="btn-tool">
+                                <i class="fas fa-square"></i>
+                                <span>مستطيل</span>
+                            </button>
+                            <button class="btn-tool">
+                                <i class="fas fa-circle"></i>
+                                <span>دائرة</span>
+                            </button>
+                            <button class="btn-tool">
+                                <i class="fas fa-font"></i>
+                                <span>نص</span>
+                            </button>
+                            <button class="btn-tool">
+                                <i class="fas fa-eraser"></i>
+                                <span>مسح</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- صفحة الأنماط -->
+            <div id="patterns-page" class="page-content" style="display: none;">
+                <div class="page-header">
+                    <h1>الأنماط</h1>
+                    <div class="user-info">
+                        <span class="user-name">مرحباً، المستخدم</span>
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="patterns-filters">
+                    <div class="filter-group">
+                        <label for="pattern-pair">الزوج</label>
+                        <select id="pattern-pair" class="form-select">
+                            <option value="all">الكل</option>
+                            <option value="EURUSD">EUR/USD</option>
+                            <option value="GBPUSD">GBP/USD</option>
+                            <option value="USDJPY">USD/JPY</option>
+                            <option value="AUDUSD">AUD/USD</option>
+                            <option value="USDCAD">USD/CAD</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="pattern-type">نوع النمط</label>
+                        <select id="pattern-type" class="form-select">
+                            <option value="all">الكل</option>
+                            <option value="harmonic">متناغم</option>
+                            <option value="candlestick">شمعدان</option>
+                            <option value="classic">كلاسيكي</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="pattern-timeframe">الإطار الزمني</label>
+                        <select id="pattern-timeframe" class="form-select">
+                            <option value="all">الكل</option>
+                            <option value="1h">1 ساعة</option>
+                            <option value="4h">4 ساعات</option>
+                            <option value="1d">يومي</option>
+                        </select>
+                    </div>
+                    <button class="btn-apply-filter">تطبيق</button>
+                </div>
+                
+                <div class="patterns-grid">
+                    <div class="pattern-card">
+                        <div class="pattern-header">
+                            <h3>نمط الفراشة المتناغم</h3>
+                            <span class="pattern-pair">EUR/USD</span>
+                        </div>
+                        <div class="pattern-image">
+                            <img src="assets/images/pattern1.png" alt="نمط الفراشة المتناغم">
+                        </div>
+                        <div class="pattern-info">
+                            <div class="info-row">
+                                <span class="info-label">الإطار الزمني:</span>
+                                <span class="info-value">4 ساعات</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">الاتجاه:</span>
+                                <span class="info-value direction-up">صاعد</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">نقطة الدخول:</span>
+                                <span class="info-value">1.1842</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">الهدف:</span>
+                                <span class="info-value">1.1900</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">وقف الخسارة:</span>
+                                <span class="info-value">1.1800</span>
+                            </div>
+                        </div>
+                        <div class="pattern-actions">
+                            <button class="btn-view-chart">عرض الرسم البياني</button>
+                            <button class="btn-create-signal">إنشاء إشارة</button>
+                        </div>
+                    </div>
+                    
+                    <div class="pattern-card">
+                        <div class="pattern-header">
+                            <h3>نمط جارتلي</h3>
+                            <span class="pattern-pair">GBP/USD</span>
+                        </div>
+                        <div class="pattern-image">
+                            <img src="assets/images/pattern2.png" alt="نمط جارتلي">
+                        </div>
+                        <div class="pattern-info">
+                            <div class="info-row">
+                                <span class="info-label">الإطار الزمني:</span>
+                                <span class="info-value">يومي</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">الاتجاه:</span>
+                                <span class="info-value direction-down">هابط</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">نقطة الدخول:</span>
+                                <span class="info-value">1.3765</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">الهدف:</span>
+                                <span class="info-value">1.3700</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">وقف الخسارة:</span>
+                                <span class="info-value">1.3800</span>
+                            </div>
+                        </div>
+                        <div class="pattern-actions">
+                            <button class="btn-view-chart">عرض الرسم البياني</button>
+                            <button class="btn-create-signal">إنشاء إشارة</button>
+                        </div>
+                    </div>
+                    
+                    <div class="pattern-card">
+                        <div class="pattern-header">
+                            <h3>نمط الخفاش</h3>
+                            <span class="pattern-pair">USD/JPY</span>
+                        </div>
+                        <div class="pattern-image">
+                            <img src="assets/images/pattern3.png" alt="نمط الخفاش">
+                        </div>
+                        <div class="pattern-info">
+                            <div class="info-row">
+                                <span class="info-label">الإطار الزمني:</span>
+                                <span class="info-value">4 ساعات</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">الاتجاه:</span>
+                                <span class="info-value direction-up">صاعد</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">نقطة الدخول:</span>
+                                <span class="info-value">110.32</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">الهدف:</span>
+                                <span class="info-value">110.80</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">وقف الخسارة:</span>
+                                <span class="info-value">110.00</span>
+                            </div>
+                        </div>
+                        <div class="pattern-actions">
+                            <button class="btn-view-chart">عرض الرسم البياني</button>
+                            <button class="btn-create-signal">إنشاء إشارة</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="patterns-stats">
+                    <div class="stats-header">
+                        <h3>إحصائيات الأنماط</h3>
+                    </div>
+                    <div class="stats-body">
+                        <div class="stats-row">
+                            <div class="stats-card">
+                                <div class="stats-title">إجمالي الأنماط</div>
+                                <div class="stats-value">325</div>
+                            </div>
+                            <div class="stats-card">
+                                <div class="stats-title">الأنماط الناجحة</div>
+                                <div class="stats-value">275</div>
+                            </div>
+                            <div class="stats-card">
+                                <div class="stats-title">نسبة النجاح</div>
+                                <div class="stats-value">85%</div>
+                            </div>
+                            <div class="stats-card">
+                                <div class="stats-title">متوسط الربح</div>
+                                <div class="stats-value">52 نقطة</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- صفحة التقويم الاقتصادي -->
+            <div id="calendar-page" class="page-content" style="display: none;">
+                <div class="page-header">
+                    <h1>التقويم الاقتصادي</h1>
+                    <div class="user-info">
+                        <span class="user-name">مرحباً، المستخدم</span>
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="calendar-filters">
+                    <div class="filter-group">
+                        <label for="calendar-currency">العملة</label>
+                        <select id="calendar-currency" class="form-select">
+                            <option value="all">الكل</option>
+                            <option value="USD">الدولار الأمريكي</option>
+                            <option value="EUR">اليورو</option>
+                            <option value="GBP">الجنيه الإسترليني</option>
+                            <option value="JPY">الين الياباني</option>
+                            <option value="AUD">الدولار الأسترالي</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="calendar-impact">التأثير</label>
+                        <select id="calendar-impact" class="form-select">
+                            <option value="all">الكل</option>
+                            <option value="high">عالي</option>
+                            <option value="medium">متوسط</option>
+                            <option value="low">منخفض</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="calendar-date">التاريخ</label>
+                        <select id="calendar-date" class="form-select">
+                            <option value="today">اليوم</option>
+                            <option value="tomorrow">غداً</option>
+                            <option value="week">هذا الأسبوع</option>
+                            <option value="month">هذا الشهر</option>
+                        </select>
+                    </div>
+                    <button class="btn-apply-filter">تطبيق</button>
+                </div>
+                
+                <div class="calendar-list">
+                    <table class="calendar-table">
+                        <thead>
+                            <tr>
+                                <th>الوقت</th>
+                                <th>العد التنازلي</th>
+                                <th>العملة</th>
+                                <th>الحدث</th>
+                                <th>التأثير</th>
+                                <th>الفعلي</th>
+                                <th>المتوقع</th>
+                                <th>السابق</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>10:30</td>
+                                <td class="countdown">01:25:30</td>
+                                <td>USD</td>
+                                <td>مؤشر أسعار المستهلك</td>
+                                <td><span class="impact high">عالي</span></td>
+                                <td>-</td>
+                                <td>0.5%</td>
+                                <td>0.4%</td>
+                            </tr>
+                            <tr>
+                                <td>11:45</td>
+                                <td class="countdown">02:40:15</td>
+                                <td>EUR</td>
+                                <td>قرار سعر الفائدة</td>
+                                <td><span class="impact high">عالي</span></td>
+                                <td>-</td>
+                                <td>0.0%</td>
+                                <td>0.0%</td>
+                            </tr>
+                            <tr>
+                                <td>13:30</td>
+                                <td class="countdown">04:25:45</td>
+                                <td>GBP</td>
+                                <td>معدل البطالة</td>
+                                <td><span class="impact medium">متوسط</span></td>
+                                <td>-</td>
+                                <td>4.8%</td>
+                                <td>4.9%</td>
+                            </tr>
+                            <tr>
+                                <td>15:00</td>
+                                <td class="countdown">05:55:20</td>
+                                <td>USD</td>
+                                <td>مبيعات التجزئة</td>
+                                <td><span class="impact high">عالي</span></td>
+                                <td>-</td>
+                                <td>0.7%</td>
+                                <td>0.6%</td>
+                            </tr>
+                            <tr>
+                                <td>17:30</td>
+                                <td class="countdown">08:25:10</td>
+                                <td>JPY</td>
+                                <td>الناتج المحلي الإجمالي</td>
+                                <td><span class="impact medium">متوسط</span></td>
+                                <td>-</td>
+                                <td>0.3%</td>
+                                <td>0.2%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="calendar-legend">
+                    <div class="legend-header">
+                        <h3>مفتاح التأثير</h3>
+                    </div>
+                    <div class="legend-body">
+                        <div class="legend-item">
+                            <span class="impact high"></span>
+                            <span class="legend-text">تأثير عالي</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="impact medium"></span>
+                            <span class="legend-text">تأثير متوسط</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="impact low"></span>
+                            <span class="legend-text">تأثير منخفض</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- صفحة الإعدادات -->
+            <div id="settings-page" class="page-content" style="display: none;">
+                <div class="page-header">
+                    <h1>الإعدادات</h1>
+                    <div class="user-info">
+                        <span class="user-name">مرحباً، المستخدم</span>
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-container">
+                    <div class="settings-sidebar">
+                        <div class="settings-nav">
+                            <div class="settings-nav-item active" data-settings="account">
+                                <i class="fas fa-user-circle"></i>
+                                <span>الحساب</span>
+                            </div>
+                            <div class="settings-nav-item" data-settings="notifications">
+                                <i class="fas fa-bell"></i>
+                                <span>الإشعارات</span>
+                            </div>
+                            <div class="settings-nav-item" data-settings="appearance">
+                                <i class="fas fa-palette"></i>
+                                <span>المظهر</span>
+                            </div>
+                            <div class="settings-nav-item" data-settings="signals">
+                                <i class="fas fa-signal"></i>
+                                <span>الإشارات</span>
+                            </div>
+                            <div class="settings-nav-item" data-settings="security">
+                                <i class="fas fa-shield-alt"></i>
+                                <span>الأمان</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-content">
+                        <div class="settings-section" id="account-settings">
+                            <div class="settings-header">
+                                <h2>إعدادات الحساب</h2>
+                            </div>
+                            <div class="settings-body">
+                                <form class="settings-form">
+                                    <div class="form-group">
+                                        <label for="account-name">الاسم</label>
+                                        <input type="text" id="account-name" class="form-control" value="المستخدم">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="account-email">البريد الإلكتروني</label>
+                                        <input type="email" id="account-email" class="form-control" value="user@example.com">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="account-phone">رقم الهاتف</label>
+                                        <input type="tel" id="account-phone" class="form-control" value="+966 5XX XXX XXX">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="account-language">اللغة</label>
+                                        <select id="account-language" class="form-select">
+                                            <option value="ar" selected>العربية</option>
+                                            <option value="en">الإنجليزية</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="account-timezone">المنطقة الزمنية</label>
+                                        <select id="account-timezone" class="form-select">
+                                            <option value="Asia/Riyadh" selected>الرياض (GMT+3)</option>
+                                            <option value="Europe/London">لندن (GMT+0)</option>
+                                            <option value="America/New_York">نيويورك (GMT-5)</option>
+                                        </select>
+                                    </div>
+                                    <button type="button" class="btn-save">حفظ التغييرات</button>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section" id="notifications-settings" style="display: none;">
+                            <div class="settings-header">
+                                <h2>إعدادات الإشعارات</h2>
+                            </div>
+                            <div class="settings-body">
+                                <div class="toggle-container">
+                                    <span>إشعارات الإشارات الجديدة</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="toggle-container">
+                                    <span>إشعارات الأنماط المكتشفة</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="toggle-container">
+                                    <span>إشعارات التقويم الاقتصادي</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="toggle-container">
+                                    <span>إشعارات البريد الإلكتروني</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="toggle-container">
+                                    <span>إشعارات الرسائل النصية</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <button type="button" class="btn-save">حفظ التغييرات</button>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section" id="appearance-settings" style="display: none;">
+                            <div class="settings-header">
+                                <h2>إعدادات المظهر</h2>
+                            </div>
+                            <div class="settings-body">
+                                <div class="form-group">
+                                    <label>المظهر</label>
+                                    <div class="theme-options">
+                                        <div class="theme-option active" data-theme="dark">
+                                            <div class="theme-preview dark-theme"></div>
+                                            <span>داكن</span>
+                                        </div>
+                                        <div class="theme-option" data-theme="light">
+                                            <div class="theme-preview light-theme"></div>
+                                            <span>فاتح</span>
+                                        </div>
+                                        <div class="theme-option" data-theme="auto">
+                                            <div class="theme-preview auto-theme"></div>
+                                            <span>تلقائي</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>اللون الرئيسي</label>
+                                    <div class="color-options">
+                                        <div class="color-option active" data-color="gold" style="background-color: #f0c14b;"></div>
+                                        <div class="color-option" data-color="blue" style="background-color: #2196f3;"></div>
+                                        <div class="color-option" data-color="green" style="background-color: #4caf50;"></div>
+                                        <div class="color-option" data-color="purple" style="background-color: #9c27b0;"></div>
+                                        <div class="color-option" data-color="red" style="background-color: #f44336;"></div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="font-size">حجم الخط</label>
+                                    <select id="font-size" class="form-select">
+                                        <option value="small">صغير</option>
+                                        <option value="medium" selected>متوسط</option>
+                                        <option value="large">كبير</option>
+                                    </select>
+                                </div>
+                                <button type="button" class="btn-save">حفظ التغييرات</button>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section" id="signals-settings" style="display: none;">
+                            <div class="settings-header">
+                                <h2>إعدادات الإشارات</h2>
+                            </div>
+                            <div class="settings-body">
+                                <div class="form-group">
+                                    <label for="risk-level">مستوى المخاطرة</label>
+                                    <select id="risk-level" class="form-select">
+                                        <option value="low">منخفض</option>
+                                        <option value="medium" selected>متوسط</option>
+                                        <option value="high">عالي</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="signal-pairs">أزواج العملات</label>
+                                    <select id="signal-pairs" class="form-select" multiple>
+                                        <option value="EURUSD" selected>EUR/USD</option>
+                                        <option value="GBPUSD" selected>GBP/USD</option>
+                                        <option value="USDJPY" selected>USD/JPY</option>
+                                        <option value="AUDUSD">AUD/USD</option>
+                                        <option value="USDCAD">USD/CAD</option>
+                                        <option value="USDCHF">USD/CHF</option>
+                                        <option value="NZDUSD">NZD/USD</option>
+                                    </select>
+                                </div>
+                                <div class="toggle-container">
+                                    <span>إشارات الشراء</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="toggle-container">
+                                    <span>إشارات البيع</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="toggle-container">
+                                    <span>إشارات الأنماط المتناغمة</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <button type="button" class="btn-save">حفظ التغييرات</button>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section" id="security-settings" style="display: none;">
+                            <div class="settings-header">
+                                <h2>إعدادات الأمان</h2>
+                            </div>
+                            <div class="settings-body">
+                                <div class="form-group">
+                                    <label for="current-password">كلمة المرور الحالية</label>
+                                    <input type="password" id="current-password" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="new-password">كلمة المرور الجديدة</label>
+                                    <input type="password" id="new-password" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="confirm-password">تأكيد كلمة المرور</label>
+                                    <input type="password" id="confirm-password" class="form-control">
+                                </div>
+                                <div class="toggle-container">
+                                    <span>المصادقة الثنائية</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="toggle-container">
+                                    <span>تسجيل الدخول التلقائي</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <button type="button" class="btn-save">حفظ التغييرات</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

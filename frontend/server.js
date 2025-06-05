@@ -20,7 +20,7 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
 // استيراد الخدمات
-const databaseService = require('./services/databaseService');
+const databaseService = require(require('path').resolve(__dirname, './services/databaseService.js'));
 const forexDataService = require('./services/forexDataService');
 const signalService = require('./services/signalService');
 const calendarService = require('./services/calendarService');

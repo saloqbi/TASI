@@ -1,0 +1,185 @@
+/* أنماط صفحة التقويم الاقتصادي */
+.calendar-page {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.calendar-header {
+    margin-bottom: 20px;
+}
+
+.calendar-header h2 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.calendar-filters {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.calendar-selector {
+    background-color: #333;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    min-width: 150px;
+}
+
+.calendar-navigation {
+    display: flex;
+    gap: 10px;
+    margin-right: auto;
+}
+
+.calendar-nav-button {
+    background-color: #333;
+    color: #fff;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.calendar-today-button {
+    background-color: #0d6efd;
+}
+
+.calendar-date-range {
+    margin-top: 10px;
+    margin-bottom: 20px;
+    font-size: 18px;
+    color: #aaa;
+}
+
+.calendar-day-section {
+    margin-bottom: 30px;
+    background-color: #1e1e1e;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.calendar-day-header {
+    padding: 15px;
+    background-color: #2a2a2a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.calendar-day-name {
+    margin: 0;
+    font-size: 18px;
+}
+
+.calendar-day-date {
+    color: #aaa;
+    font-size: 14px;
+}
+
+.calendar-day-content {
+    padding: 15px;
+}
+
+.calendar-no-events {
+    text-align: center;
+    color: #aaa;
+    padding: 20px;
+}
+
+.calendar-events-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.calendar-events-table th,
+.calendar-events-table td {
+    padding: 12px 10px;
+    text-align: right;
+    border-bottom: 1px solid #333;
+}
+
+.calendar-events-table th {
+    color: #aaa;
+    font-weight: normal;
+}
+
+.calendar-country-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.flag-icon {
+    width: 20px;
+    height: 15px;
+    background-size: cover;
+    display: inline-block;
+}
+
+.calendar-impact-cell {
+    display: flex;
+    gap: 3px;
+}
+
+.impact-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #444;
+    display: inline-block;
+}
+
+.high-impact {
+    background-color: #dc3545;
+}
+
+.medium-impact {
+    background-color: #ffc107;
+}
+
+.low-impact {
+    background-color: #28a745;
+}
+
+.better-than-expected {
+    color: #28a745;
+}
+
+.worse-than-expected {
+    color: #dc3545;
+}
+
+/* تحسينات للأجهزة المحمولة */
+@media (max-width: 768px) {
+    .calendar-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .calendar-navigation {
+        margin-right: 0;
+        justify-content: space-between;
+        width: 100%;
+    }
+    
+    .calendar-events-table {
+        display: block;
+        overflow-x: auto;
+    }
+    
+    .calendar-day-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .calendar-day-date {
+        margin-top: 5px;
+    }
+}
