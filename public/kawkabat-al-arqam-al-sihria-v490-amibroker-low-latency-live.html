@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>كوكبة الأرقام السحرية V490 — AmiBroker Low Latency Live</title>
+  <style>
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#f7f1e3}
+    #v490-frame{display:block;width:100%;height:100%;border:0}
+  </style>
+</head>
+<body>
+  <iframe id="v490-frame" title="كوكبة الأرقام السحرية"
+    src="https://htmlpreview.github.io/?https://github.com/KawkabatSeherAlarqam-Org/KawkabatSeherAlarqam/blob/main/public/kawkabat-al-arqam-al-sihria-v489-amibroker-live-final-clean.html"></iframe>
+  <script id="v490AmiBrokerLowLatencyFix">
+  (function(){
+    'use strict';
+    var outer=document.getElementById('v490-frame');
+    var ENDPOINTS=['http://127.0.0.1:8770/quote','http://127.0.0.1:8770/live_quote.json'];
+    var POLL_MS=120,FETCH_TIMEOUT_MS=320,OFFLINE_AFTER_MS=1800;
+    var GREEN='#20C85A',RED='#E53945';
+    var activeEndpoint=null,pollBusy=false,lastPrice=null,lastDirection='UP',lastGoodAt=0,lastSourceTimestamp=null,currentSymbol='WAITING';
+    var requestCount=0,successCount=0,errorCount=0,paintCount=0,lastCellValue=null,lastCellTick=null,statusBadge=null;
+
+    function visit(doc,callback,depth){
+      if(!doc||depth>800)return null;
+      var hit=callback(doc);if(hit)return hit;
+      var frames=doc.querySelectorAll('iframe');
+      for(var i=0;i<frames.length;i++){try{var found=visit(frames[i].contentDocument,callback,depth+1);if(found)return found;}catch(error){}}
+      return null;
+    }
+    function root(){try{return outer.contentDocument;}catch(error){return null;}}
+    function controlDoc(){var r=root();return r&&visit(r,function(doc){return doc.querySelector('input[aria-label="Value"]')?doc:null;},0);}
+    function wheelDoc(){var r=root();return r&&visit(r,function(doc){return doc.getElementById('wheel')&&doc.querySelector('.approved-cycle-number[data-tick]')?doc:null;},0);}
+    function western(value){
+      var map={'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9','۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9'};
+      var text=String(value==null?'':value).replace(/[٠-٩۰-۹]/g,function(d){return map[d]||d;}).replace(/,/g,'').trim();
+      var n=Number(text);return Number.isFinite(n)?n:null;
+    }
+    function parseTimestamp(value){
+      if(value==null||value==='')return null;
+      if(typeof value==='number'){if(!Number.isFinite(value))return null;return value<1e12?value*1000:value;}
+      var numeric=Number(value);if(Number.isFinite(numeric))return numeric<1e12?numeric*1000:numeric;
+      var parsed=Date.parse(String(value));return Number.isFinite(parsed)?parsed:null;
+    }
+    function quoteData(payload){
+      if(payload==null)return null;
+      if(typeof payload==='number'||typeof payload==='string'){var simple=western(payload);return simple===null?null:{price:simple,symbol:currentSymbol,direction:null,sourceTimestamp:null};}
+      var candidates=[payload.price,payload.last,payload.close,payload.value,payload.ltp,payload.LTP];
+      if(payload.quote)candidates.push(payload.quote.price,payload.quote.last,payload.quote.close,payload.quote.ltp,payload.quote.LTP);
+      if(payload.data)candidates.push(payload.data.price,payload.data.last,payload.data.close,payload.data.ltp,payload.data.LTP);
+      var price=null;for(var i=0;i<candidates.length;i++){var n=western(candidates[i]);if(n!==null&&n>0){price=n;break;}}
+      if(price===null)return null;
+      var symbol=String(payload.symbol||(payload.quote&&payload.quote.symbol)||(payload.data&&payload.data.symbol)||currentSymbol||'SYMBOL').trim().toUpperCase();
+      var direction=String(payload.direction||(payload.quote&&payload.quote.direction)||(payload.data&&payload.data.direction)||'').trim().toUpperCase();
+      if(direction!=='UP'&&direction!=='DOWN')direction=null;
+      var sourceTimestamp=parseTimestamp(payload.observedAt||payload.observed_at||payload.timestamp||payload.time||payload.ts||
+        (payload.quote&&(payload.quote.observedAt||payload.quote.timestamp||payload.quote.time||payload.quote.ts))||
+        (payload.data&&(payload.data.observedAt||payload.data.timestamp||payload.data.time||payload.data.ts)));
+      return{price:price,symbol:symbol,direction:direction,sourceTimestamp:sourceTimestamp};
+    }
+    function nodeValue(node){
+      var primary=node.querySelector('tspan[data-v131-number-role="primary"]');
+      var values=[node.getAttribute('data-v131-display-value'),primary&&primary.textContent,node.textContent];
+      for(var i=0;i<values.length;i++){var n=western(values[i]);if(n!==null)return n;}return null;
+    }
+    function findPriceNode(doc,price){
+      var nodes=doc.querySelectorAll('.approved-cycle-number[data-tick]'),items=[];
+      for(var i=0;i<nodes.length;i++){var value=nodeValue(nodes[i]);if(value!==null)items.push({node:nodes[i],value:value});}
+      if(!items.length)return null;
+      items.sort(function(a,b){return a.value-b.value;});
+      var unique=[];for(var j=0;j<items.length;j++){if(!unique.length||Math.abs(items[j].value-unique[unique.length-1].value)>1e-9)unique.push(items[j]);}
+      var steps=[];for(var k=1;k<unique.length;k++){var delta=unique[k].value-unique[k-1].value;if(delta>1e-9)steps.push(delta);}steps.sort(function(a,b){return a-b;});
+      var fallbackStep=steps.length?steps[Math.floor(steps.length/2)]:1;
+      if(price<unique[0].value||price>=unique[unique.length-1].value+fallbackStep)return null;
+      var low=0,high=unique.length-1;while(low<=high){var mid=(low+high)>>1;if(unique[mid].value<=price)low=mid+1;else high=mid-1;}
+      return unique[Math.max(0,high)].node;
+    }
+    function matchingPath(doc,node){
+      var tick=String(node.getAttribute('data-tick')||''),paths=doc.querySelectorAll('#v131CellColorLayer path[data-v131-cell-key]');
+      for(var i=0;i<paths.length;i++){var key=String(paths[i].getAttribute('data-v131-cell-key')||'');if(key.slice(-(tick.length+1))==='|'+tick)return paths[i];}
+      var x=Number(node.getAttribute('x')),y=Number(node.getAttribute('y'));if(!Number.isFinite(x)||!Number.isFinite(y))return null;
+      var targetAngle=Math.atan2(y-1800,x-2200)*180/Math.PI,targetRadius=Math.hypot(x-2200,y-1800),best=null,bestScore=Infinity;
+      for(var j=0;j<paths.length;j++){try{var box=paths[j].getBBox(),px=box.x+box.width/2,py=box.y+box.height/2;var angle=Math.atan2(py-1800,px-2200)*180/Math.PI,radius=Math.hypot(px-2200,py-1800);var da=Math.abs(angle-targetAngle);da=Math.min(da,360-da);var score=da*20+Math.abs(radius-targetRadius);if(score<bestScore){best=paths[j];bestScore=score;}}catch(error){}}
+      return best;
+    }
+    function removeOldLiveOverlays(doc){if(!doc)return;['v484LivePriceCell','v486LivePriceCell','v490LivePriceCell'].forEach(function(id){var old=doc.getElementById(id);if(old)old.remove();});}
+    function paintLiveCell(price,direction){
+      var doc=wheelDoc();if(!doc)return false;
+      var node=findPriceNode(doc,price);if(!node){removeOldLiveOverlays(doc);lastCellValue=null;lastCellTick=null;return false;}
+      var source=matchingPath(doc,node);if(!source)return false;
+      var tick=String(node.getAttribute('data-tick')||''),color=direction==='DOWN'?RED:GREEN,existing=doc.getElementById('v490LivePriceCell');
+      if(existing&&existing.isConnected&&lastCellTick===tick&&existing.getAttribute('data-v490-direction')===direction){
+        existing.setAttribute('data-v490-price',String(price));node.setAttribute('data-v490-live-price',String(price));doc.documentElement.dataset.v490LivePrice=String(price);doc.documentElement.dataset.v490LiveDirection=direction;lastCellValue=nodeValue(node);return true;
+      }
+      removeOldLiveOverlays(doc);
+      var overlay=source.cloneNode(false);overlay.id='v490LivePriceCell';overlay.removeAttribute('data-v131-cell-key');overlay.removeAttribute('data-state');overlay.setAttribute('pointer-events','none');overlay.setAttribute('aria-hidden','true');overlay.setAttribute('fill',color);overlay.setAttribute('fill-opacity','0.80');overlay.setAttribute('stroke',direction==='DOWN'?'#8B0B16':'#087A2E');overlay.setAttribute('stroke-width','3.4');overlay.setAttribute('stroke-opacity','1');overlay.setAttribute('data-v490-direction',direction);overlay.setAttribute('data-v490-price',String(price));overlay.style.setProperty('fill',color,'important');overlay.style.setProperty('fill-opacity','0.80','important');overlay.style.setProperty('opacity','1','important');overlay.style.setProperty('filter','drop-shadow(0 0 11px '+color+')','important');source.parentNode.appendChild(overlay);
+      node.setAttribute('data-v490-live-price',String(price));doc.documentElement.dataset.v490LivePrice=String(price);doc.documentElement.dataset.v490LiveDirection=direction;lastCellValue=nodeValue(node);lastCellTick=tick;paintCount+=1;return true;
+    }
+    function publishQuote(quote,direction){
+      var doc=wheelDoc();if(doc){doc.documentElement.dataset.amibrokerLive='true';doc.documentElement.dataset.amibrokerSymbol=quote.symbol;doc.documentElement.dataset.amibrokerPrice=String(quote.price);doc.documentElement.dataset.v490QuoteReceivedAt=String(Date.now());if(quote.sourceTimestamp!==null)doc.documentElement.dataset.v490QuoteSourceTimestamp=String(quote.sourceTimestamp);}
+      var r=root();if(!r)return;visit(r,function(candidate){try{if(candidate.defaultView)candidate.defaultView.postMessage({type:'tasi-xauusd-quote',symbol:quote.symbol,price:quote.price,direction:direction,observedAt:quote.sourceTimestamp||Date.now(),source:'v490-low-latency'},'*');}catch(error){}return null;},0);
+    }
+    function ensureStatus(){
+      var doc=controlDoc();if(!doc)return null;
+      var style=doc.getElementById('v490LowLatencyStyle');if(!style){style=doc.createElement('style');style.id='v490LowLatencyStyle';style.textContent='#v482CleanLiveStatus{display:none!important}';doc.head.appendChild(style);}
+      statusBadge=doc.getElementById('v490LowLatencyStatus');if(!statusBadge){statusBadge=doc.createElement('div');statusBadge.id='v490LowLatencyStatus';statusBadge.setAttribute('role','status');statusBadge.style.cssText='position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:2147483647;padding:7px 14px;border:1px solid #8a641e;border-radius:8px;background:#fff7dc;color:#65470f;font:700 14px Arial,Tahoma,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.22);direction:ltr;pointer-events:none;white-space:nowrap';statusBadge.textContent='WAITING FOR AMIBROKER';doc.body.appendChild(statusBadge);}return statusBadge;
+    }
+    function formatPrice(price){var p=Number(price);if(!Number.isFinite(p))return '--';return p.toFixed(3).replace(/0+$/,'').replace(/\.$/,'');}
+    function paintStatus(online,quote,direction){
+      var badge=ensureStatus();if(!badge)return;
+      if(online&&quote){var arrow=direction==='DOWN'?' ▼':' ▲',ageText='';if(quote.sourceTimestamp!==null){var age=Math.max(0,Date.now()-quote.sourceTimestamp);ageText=' · '+age+'ms';}badge.textContent=quote.symbol+' '+formatPrice(quote.price)+arrow+' LIVE'+ageText;if(direction==='DOWN'){badge.style.background='#ffe8e8';badge.style.color='#9d1010';badge.style.borderColor='#c62c2c';}else{badge.style.background='#e6ffe9';badge.style.color='#116527';badge.style.borderColor='#23923b';}}
+      else{badge.textContent='WAITING FOR AMIBROKER';badge.style.background='#fff7dc';badge.style.color='#65470f';badge.style.borderColor='#8a641e';}
+    }
+    async function readEndpoint(url){
+      requestCount+=1;var controller=typeof AbortController==='function'?new AbortController():null;var timeout=setTimeout(function(){try{if(controller)controller.abort();}catch(error){}},FETCH_TIMEOUT_MS);
+      try{var response=await fetch(url+(url.indexOf('?')<0?'?':'&')+'_v490='+Date.now(),{method:'GET',mode:'cors',cache:'no-store',credentials:'omit',headers:{'Accept':'application/json','Cache-Control':'no-cache'},signal:controller?controller.signal:undefined});if(!response.ok)throw new Error('HTTP '+response.status);return quoteData(await response.json());}finally{clearTimeout(timeout);}
+    }
+    async function getQuote(){
+      var urls=activeEndpoint?[activeEndpoint].concat(ENDPOINTS.filter(function(url){return url!==activeEndpoint;})):ENDPOINTS.slice();
+      for(var i=0;i<urls.length;i++){try{var quote=await readEndpoint(urls[i]);if(quote&&quote.price!==null){activeEndpoint=urls[i];return quote;}}catch(error){errorCount+=1;}}return null;
+    }
+    async function poll(){
+      if(pollBusy)return;pollBusy=true;
+      try{var quote=await getQuote();if(quote&&quote.price!==null){var direction=quote.direction;if(direction!=='UP'&&direction!=='DOWN'){if(lastPrice!==null&&quote.price<lastPrice)direction='DOWN';else if(lastPrice!==null&&quote.price>lastPrice)direction='UP';else direction=lastDirection||'UP';}lastDirection=direction;lastPrice=quote.price;currentSymbol=quote.symbol||currentSymbol;lastSourceTimestamp=quote.sourceTimestamp;lastGoodAt=Date.now();successCount+=1;publishQuote(quote,direction);paintLiveCell(quote.price,direction);paintStatus(true,quote,direction);}else if(Date.now()-lastGoodAt>OFFLINE_AFTER_MS){paintStatus(false,null,lastDirection);}}
+      catch(error){errorCount+=1;if(Date.now()-lastGoodAt>OFFLINE_AFTER_MS)paintStatus(false,null,lastDirection);}finally{pollBusy=false;}
+    }
+    function maintenance(){try{ensureStatus();if(lastPrice!==null)paintLiveCell(lastPrice,lastDirection);}catch(error){}}
+    outer.addEventListener('load',function(){setTimeout(function(){maintenance();poll();},120);});
+    setInterval(poll,POLL_MS);setInterval(maintenance,900);poll();
+    window.__auditV490AmiBrokerLowLatency=function(){return{mode:lastGoodAt&&Date.now()-lastGoodAt<OFFLINE_AFTER_MS?'LIVE':'WAITING',symbol:currentSymbol,lastPrice:lastPrice,lastDirection:lastDirection,lastCellValue:lastCellValue,lastCellTick:lastCellTick,activeEndpoint:activeEndpoint,pollIntervalMs:POLL_MS,fetchTimeoutMs:FETCH_TIMEOUT_MS,requestCount:requestCount,successCount:successCount,errorCount:errorCount,paintCount:paintCount,lastSourceTimestamp:lastSourceTimestamp,lastGoodAt:lastGoodAt,exactPricePublishedContinuously:true,gridRemainsFixed:true,liveCellMovesContinuously:true,upClockwiseGreen:true,downCounterClockwiseRed:true,legacyV489StatusHidden:true};};
+  }());
+  </script>
+</body>
+</html>
