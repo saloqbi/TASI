@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>كوكبة الأرقام السحرية V492 — AmiBroker Auto Port Root Fix</title>
+<style>
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#f7f1e3}
+#v492-frame{display:block;width:100%;height:100%;border:0}
+#v492PriceBoard{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:2147483647;min-width:265px;height:40px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 14px;border:1px solid #8a641e;border-radius:9px;background:#fff7dc;color:#65470f;font:800 15px Arial,Tahoma,sans-serif;direction:ltr;white-space:nowrap;box-shadow:0 2px 9px rgba(0,0,0,.24);pointer-events:none}
+#v492PriceBoard[data-mode="live-up"]{background:#e6ffe9;color:#116527;border-color:#23923b}
+#v492PriceBoard[data-mode="live-down"]{background:#ffe8e8;color:#9d1010;border-color:#c62c2c}
+#v492PriceBoard .symbol{font-weight:900}
+#v492PriceBoard .price{font-size:18px;font-weight:900;min-width:86px;text-align:center}
+#v492PriceBoard .state{font-size:12px;font-weight:900}
+#v492PriceBoard .port{font-size:11px;font-weight:800;opacity:.72}
+</style>
+</head>
+<body>
+<div id="v492PriceBoard" data-mode="waiting" role="status" aria-live="polite">
+  <span class="symbol">AMIBROKER</span><span class="price">--</span><span class="state">SCANNING</span><span class="port">8768/8770</span>
+</div>
+<iframe id="v492-frame" title="كوكبة الأرقام السحرية"
+ src="https://htmlpreview.github.io/?https://github.com/KawkabatSeherAlarqam-Org/KawkabatSeherAlarqam/blob/main/public/kawkabat-al-arqam-al-sihria-v489-amibroker-live-final-clean.html"></iframe>
+<script id="v492AmiBrokerRootFix">
+(function(){
+'use strict';
+var outer=document.getElementById('v492-frame');
+var board=document.getElementById('v492PriceBoard');
+/* 8768 is the original working AmiBroker bridge port used by V482. 8770 remains as fallback. */
+var ENDPOINTS=[
+ 'http://127.0.0.1:8768/quote',
+ 'http://127.0.0.1:8768/live_quote.json',
+ 'http://127.0.0.1:8770/quote',
+ 'http://127.0.0.1:8770/live_quote.json'
+];
+var POLL_MS=220,FETCH_TIMEOUT_MS=900,OFFLINE_AFTER_MS=2600;
+var GREEN='#20C85A',RED='#E53945';
+var activeEndpoint=null,pollBusy=false,lastPrice=null,lastDirection='UP',lastGoodAt=0,currentSymbol='WAITING';
+var requestCount=0,successCount=0,errorCount=0,paintCount=0,lastCellValue=null,lastCellTick=null;
+var anchorPrice=null,anchorApplied=false,anchorApplyCount=0;
+
+function visit(doc,callback,depth){
+ if(!doc||depth>800)return null;
+ var hit=callback(doc);if(hit)return hit;
+ var frames=doc.querySelectorAll('iframe');
+ for(var i=0;i<frames.length;i++){try{var found=visit(frames[i].contentDocument,callback,depth+1);if(found)return found;}catch(error){}}
+ return null;
+}
+function root(){try{return outer.contentDocument;}catch(error){return null;}}
+function controlDoc(){var r=root();return r&&visit(r,function(doc){return doc.querySelector('input[aria-label="Value"]')?doc:null;},0);}
+function wheelDoc(){var r=root();return r&&visit(r,function(doc){return doc.getElementById('wheel')&&doc.querySelector('.approved-cycle-number[data-tick]')?doc:null;},0);}
+function western(value){
+ var map={'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9','۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9'};
+ var text=String(value==null?'':value).replace(/[٠-٩۰-۹]/g,function(d){return map[d]||d;}).replace(/,/g,'').trim();
+ var n=Number(text);return Number.isFinite(n)?n:null;
+}
+function quoteData(payload){
+ if(payload==null)return null;
+ if(typeof payload==='number'||typeof payload==='string'){
+  var simple=western(payload);return simple!==null&&simple>0?{price:simple,symbol:currentSymbol,direction:null}:null;
+ }
+ var candidates=[payload.price,payload.last,payload.close,payload.value,payload.ltp,payload.LTP];
+ if(payload.quote)candidates.push(payload.quote.price,payload.quote.last,payload.quote.close,payload.quote.value,payload.quote.ltp,payload.quote.LTP);
+ if(payload.data)candidates.push(payload.data.price,payload.data.last,payload.data.close,payload.data.value,payload.data.ltp,payload.data.LTP);
+ var price=null;for(var i=0;i<candidates.length;i++){var n=western(candidates[i]);if(n!==null&&n>0){price=n;break;}}
+ if(price===null)return null;
+ var symbol=String(payload.symbol||(payload.quote&&payload.quote.symbol)||(payload.data&&payload.data.symbol)||currentSymbol||'XAUUSD').trim().toUpperCase();
+ var direction=String(payload.direction||(payload.quote&&payload.quote.direction)||(payload.data&&payload.data.direction)||'').trim().toUpperCase();
+ if(direction!=='UP'&&direction!=='DOWN')direction=null;
+ return{price:price,symbol:symbol,direction:direction};
+}
+function endpointPort(url){var m=String(url||'').match(/:(\d+)\//);return m?m[1]:'?';}
+function setNative(input,value){
+ var win=input.ownerDocument.defaultView,proto=win.HTMLInputElement&&win.HTMLInputElement.prototype;
+ var descriptor=proto&&Object.getOwnPropertyDescriptor(proto,'value');
+ if(descriptor&&descriptor.set)descriptor.set.call(input,String(value));else input.value=String(value);
+ ['input','change','keyup','blur'].forEach(function(name){input.dispatchEvent(new win.Event(name,{bubbles:true}));});
+}
+function canonicalEngine(){
+ var r=root();if(!r)return null;
+ return visit(r,function(doc){var win=doc.defaultView;return win&&typeof win.__setKawkabatCanonicalValue==='function'?win:null;},0);
+}
+function applyWheelAnchor(price){
+ if(anchorApplied)return true;
+ var doc=controlDoc(),input=doc&&doc.querySelector('input[aria-label="Value"]');if(!input)return false;
+ anchorPrice=Math.max(1,Math.floor(Number(price)));
+ var value=String(anchorPrice),engine=canonicalEngine();
+ try{if(engine)engine.__setKawkabatCanonicalValue(value);else setNative(input,value);}catch(error){setNative(input,value);}
+ anchorApplyCount+=1;
+ /* repeat a few times only during initial React/wheel settling, then stop forever */
+ [120,350,900,1800].forEach(function(delay){setTimeout(function(){try{var d=controlDoc(),i=d&&d.querySelector('input[aria-label="Value"]');if(!i)return;var e=canonicalEngine();if(String(i.value)!==value){if(e)e.__setKawkabatCanonicalValue(value);else setNative(i,value);}anchorApplyCount+=1;}catch(error){}},delay);});
+ setTimeout(function(){anchorApplied=true;},2200);
+ return true;
+}
+function nodeValue(node){
+ var primary=node.querySelector('tspan[data-v131-number-role="primary"]');
+ var values=[node.getAttribute('data-v131-display-value'),primary&&primary.textContent,node.textContent];
+ for(var i=0;i<values.length;i++){var n=western(values[i]);if(n!==null)return n;}return null;
+}
+function findPriceNode(doc,price){
+ var nodes=doc.querySelectorAll('.approved-cycle-number[data-tick]'),items=[];
+ for(var i=0;i<nodes.length;i++){var value=nodeValue(nodes[i]);if(value!==null)items.push({node:nodes[i],value:value});}
+ if(!items.length)return null;
+ items.sort(function(a,b){return a.value-b.value;});
+ var unique=[];for(var j=0;j<items.length;j++){if(!unique.length||Math.abs(items[j].value-unique[unique.length-1].value)>1e-9)unique.push(items[j]);}
+ var steps=[];for(var k=1;k<unique.length;k++){var delta=unique[k].value-unique[k-1].value;if(delta>1e-9)steps.push(delta);}steps.sort(function(a,b){return a-b;});
+ var fallbackStep=steps.length?steps[Math.floor(steps.length/2)]:1;
+ if(price<unique[0].value||price>=unique[unique.length-1].value+fallbackStep)return null;
+ var low=0,high=unique.length-1;while(low<=high){var mid=(low+high)>>1;if(unique[mid].value<=price)low=mid+1;else high=mid-1;}
+ return unique[Math.max(0,high)].node;
+}
+function matchingPath(doc,node){
+ var tick=String(node.getAttribute('data-tick')||''),paths=doc.querySelectorAll('#v131CellColorLayer path[data-v131-cell-key]');
+ for(var i=0;i<paths.length;i++){var key=String(paths[i].getAttribute('data-v131-cell-key')||'');if(key.slice(-(tick.length+1))==='|'+tick)return paths[i];}
+ var x=Number(node.getAttribute('x')),y=Number(node.getAttribute('y'));if(!Number.isFinite(x)||!Number.isFinite(y))return null;
+ var targetAngle=Math.atan2(y-1800,x-2200)*180/Math.PI,targetRadius=Math.hypot(x-2200,y-1800),best=null,bestScore=Infinity;
+ for(var j=0;j<paths.length;j++){try{var box=paths[j].getBBox(),px=box.x+box.width/2,py=box.y+box.height/2;var angle=Math.atan2(py-1800,px-2200)*180/Math.PI,radius=Math.hypot(px-2200,py-1800);var da=Math.abs(angle-targetAngle);da=Math.min(da,360-da);var score=da*20+Math.abs(radius-targetRadius);if(score<bestScore){best=paths[j];bestScore=score;}}catch(error){}}
+ return best;
+}
+function removeOld(doc){if(!doc)return;['v484LivePriceCell','v486LivePriceCell','v490LivePriceCell','v491LivePriceCell','v492LivePriceCell'].forEach(function(id){var old=doc.getElementById(id);if(old)old.remove();});}
+function paintLiveCell(price,direction){
+ var doc=wheelDoc();if(!doc)return false;
+ var node=findPriceNode(doc,price);if(!node){removeOld(doc);lastCellValue=null;lastCellTick=null;return false;}
+ var source=matchingPath(doc,node);if(!source)return false;
+ var tick=String(node.getAttribute('data-tick')||''),color=direction==='DOWN'?RED:GREEN,existing=doc.getElementById('v492LivePriceCell');
+ if(existing&&existing.isConnected&&lastCellTick===tick&&existing.getAttribute('data-v492-direction')===direction){existing.setAttribute('data-v492-price',String(price));lastCellValue=nodeValue(node);return true;}
+ removeOld(doc);
+ var overlay=source.cloneNode(false);overlay.id='v492LivePriceCell';overlay.removeAttribute('data-v131-cell-key');overlay.removeAttribute('data-state');overlay.setAttribute('pointer-events','none');overlay.setAttribute('aria-hidden','true');overlay.setAttribute('fill',color);overlay.setAttribute('fill-opacity','0.82');overlay.setAttribute('stroke',direction==='DOWN'?'#8B0B16':'#087A2E');overlay.setAttribute('stroke-width','3.5');overlay.setAttribute('stroke-opacity','1');overlay.setAttribute('data-v492-direction',direction);overlay.setAttribute('data-v492-price',String(price));overlay.style.setProperty('fill',color,'important');overlay.style.setProperty('fill-opacity','0.82','important');overlay.style.setProperty('opacity','1','important');overlay.style.setProperty('filter','drop-shadow(0 0 12px '+color+')','important');source.parentNode.appendChild(overlay);
+ node.setAttribute('data-v492-live-price',String(price));doc.documentElement.dataset.amibrokerLive='true';doc.documentElement.dataset.amibrokerPrice=String(price);doc.documentElement.dataset.amibrokerSymbol=currentSymbol;doc.documentElement.dataset.v492LiveDirection=direction;lastCellValue=nodeValue(node);lastCellTick=tick;paintCount+=1;return true;
+}
+function hideNestedStatuses(){
+ var r=root();if(!r)return;
+ visit(r,function(doc){try{var s=doc.getElementById('v492NestedStatusHide');if(!s){s=doc.createElement('style');s.id='v492NestedStatusHide';s.textContent='#v482CleanLiveStatus,#v490LowLatencyStatus,#v491PriceBoard{display:none!important}';doc.head.appendChild(s);}}catch(error){}return null;},0);
+}
+function updateBoard(online,quote,direction){
+ var symbol=board.querySelector('.symbol'),price=board.querySelector('.price'),state=board.querySelector('.state'),port=board.querySelector('.port');
+ if(online&&quote){symbol.textContent=quote.symbol||'XAUUSD';price.textContent=Number(quote.price).toFixed(3).replace(/0+$/,'').replace(/\.$/,'');state.textContent=(direction==='DOWN'?'▼':'▲')+' LIVE';port.textContent='PORT '+endpointPort(activeEndpoint);board.dataset.mode=direction==='DOWN'?'live-down':'live-up';}
+ else{symbol.textContent='AMIBROKER';price.textContent='--';state.textContent='SCANNING';port.textContent='8768/8770';board.dataset.mode='waiting';}
+}
+function publish(quote,direction){
+ var r=root();if(!r)return;
+ visit(r,function(doc){try{if(doc.defaultView)doc.defaultView.postMessage({type:'tasi-xauusd-quote',symbol:quote.symbol,price:quote.price,direction:direction,observedAt:Date.now(),source:'v492-auto-port-root-fix'},'*');}catch(error){}return null;},0);
+}
+async function readEndpoint(url){
+ requestCount+=1;var controller=typeof AbortController==='function'?new AbortController():null;var timer=setTimeout(function(){try{if(controller)controller.abort();}catch(error){}},FETCH_TIMEOUT_MS);
+ try{var response=await fetch(url+(url.indexOf('?')<0?'?':'&')+'_v492='+Date.now(),{method:'GET',mode:'cors',cache:'no-store',credentials:'omit',headers:{'Accept':'application/json','Cache-Control':'no-cache'},signal:controller?controller.signal:undefined});if(!response.ok)throw new Error('HTTP '+response.status);return quoteData(await response.json());}finally{clearTimeout(timer);}
+}
+async function getQuote(){
+ var urls=activeEndpoint?[activeEndpoint].concat(ENDPOINTS.filter(function(u){return u!==activeEndpoint;})):ENDPOINTS.slice();
+ for(var i=0;i<urls.length;i++){try{var quote=await readEndpoint(urls[i]);if(quote&&quote.price!==null){activeEndpoint=urls[i];return quote;}}catch(error){errorCount+=1;}}
+ return null;
+}
+async function poll(){
+ if(pollBusy)return;pollBusy=true;
+ try{
+  var quote=await getQuote();
+  if(quote&&quote.price!==null){
+   var direction=quote.direction;
+   if(direction!=='UP'&&direction!=='DOWN'){if(lastPrice!==null&&quote.price<lastPrice)direction='DOWN';else if(lastPrice!==null&&quote.price>lastPrice)direction='UP';else direction=lastDirection||'UP';}
+   lastDirection=direction;lastPrice=quote.price;currentSymbol=quote.symbol||currentSymbol;lastGoodAt=Date.now();successCount+=1;
+   applyWheelAnchor(quote.price);publish(quote,direction);paintLiveCell(quote.price,direction);updateBoard(true,quote,direction);
+  }else if(Date.now()-lastGoodAt>OFFLINE_AFTER_MS){activeEndpoint=null;updateBoard(false,null,lastDirection);}
+ }catch(error){errorCount+=1;if(Date.now()-lastGoodAt>OFFLINE_AFTER_MS){activeEndpoint=null;updateBoard(false,null,lastDirection);}}
+ finally{pollBusy=false;}
+}
+function maintenance(){try{hideNestedStatuses();if(lastPrice!==null){applyWheelAnchor(lastPrice);paintLiveCell(lastPrice,lastDirection);}}catch(error){}}
+outer.addEventListener('load',function(){setTimeout(function(){hideNestedStatuses();maintenance();poll();},180);});
+setInterval(poll,POLL_MS);setInterval(maintenance,1000);poll();
+window.__auditV492AmiBrokerRootFix=function(){return{mode:lastGoodAt&&Date.now()-lastGoodAt<OFFLINE_AFTER_MS?'LIVE':'SCANNING',symbol:currentSymbol,lastPrice:lastPrice,lastDirection:lastDirection,activeEndpoint:activeEndpoint,activePort:endpointPort(activeEndpoint),pollIntervalMs:POLL_MS,fetchTimeoutMs:FETCH_TIMEOUT_MS,requestCount:requestCount,successCount:successCount,errorCount:errorCount,paintCount:paintCount,lastCellValue:lastCellValue,lastCellTick:lastCellTick,anchorPrice:anchorPrice,anchorApplied:anchorApplied,anchorApplyCount:anchorApplyCount,rootCauseFixed:'V489 changed working AmiBroker port 8768 to 8770; V492 auto-discovers both and prefers 8768',fixedGridAfterInitialAnchor:true,livePriceBoardIndependent:true,liveCellMovesWithPrice:true};};
+}());
+</script>
+</body>
+</html>
