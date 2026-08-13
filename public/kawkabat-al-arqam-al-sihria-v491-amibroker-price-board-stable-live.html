@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>كوكبة الأرقام السحرية V491 — AmiBroker Stable Live Price</title>
+<style>
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#f7f1e3}
+#v491-frame{display:block;width:100%;height:100%;border:0}
+#v491PriceBoard{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:2147483647;min-width:210px;height:38px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 14px;border:1px solid #8a641e;border-radius:9px;background:#fff7dc;color:#65470f;font:800 15px Arial,Tahoma,sans-serif;direction:ltr;white-space:nowrap;box-shadow:0 2px 9px rgba(0,0,0,.24);pointer-events:none}
+#v491PriceBoard[data-mode="live-up"]{background:#e6ffe9;color:#116527;border-color:#23923b}
+#v491PriceBoard[data-mode="live-down"]{background:#ffe8e8;color:#9d1010;border-color:#c62c2c}
+#v491PriceBoard .symbol{font-weight:900}
+#v491PriceBoard .price{font-size:17px;font-weight:900;min-width:78px;text-align:center}
+#v491PriceBoard .state{font-size:12px;font-weight:900}
+</style>
+</head>
+<body>
+<div id="v491PriceBoard" data-mode="waiting" role="status" aria-live="polite">
+  <span class="symbol">AMIBROKER</span><span class="price">--</span><span class="state">WAITING</span>
+</div>
+<iframe id="v491-frame" title="كوكبة الأرقام السحرية"
+ src="https://htmlpreview.github.io/?https://github.com/KawkabatSeherAlarqam-Org/KawkabatSeherAlarqam/blob/main/public/kawkabat-al-arqam-al-sihria-v489-amibroker-live-final-clean.html"></iframe>
+<script id="v491StableAmiBrokerLive">
+(function(){
+'use strict';
+var outer=document.getElementById('v491-frame');
+var board=document.getElementById('v491PriceBoard');
+var ENDPOINTS=['http://127.0.0.1:8770/quote','http://127.0.0.1:8770/live_quote.json'];
+var POLL_MS=250,FETCH_TIMEOUT_MS=1400,OFFLINE_AFTER_MS=2600;
+var GREEN='#20C85A',RED='#E53945';
+var activeEndpoint=null,pollBusy=false,lastPrice=null,lastDirection='UP',lastGoodAt=0,lastQuote=null,currentSymbol='WAITING';
+var requestCount=0,successCount=0,errorCount=0,paintCount=0,lastCellValue=null,lastCellTick=null,nestedPollPatched=false;
+
+function visit(doc,callback,depth){
+ if(!doc||depth>800)return null;
+ var hit=callback(doc);if(hit)return hit;
+ var frames=doc.querySelectorAll('iframe');
+ for(var i=0;i<frames.length;i++){try{var found=visit(frames[i].contentDocument,callback,depth+1);if(found)return found;}catch(error){}}
+ return null;
+}
+function root(){try{return outer.contentDocument;}catch(error){return null;}}
+function wheelDoc(){var r=root();return r&&visit(r,function(doc){return doc.getElementById('wheel')&&doc.querySelector('.approved-cycle-number[data-tick]')?doc:null;},0);}
+function controlDoc(){var r=root();return r&&visit(r,function(doc){return doc.querySelector('input[aria-label="Value"]')?doc:null;},0);}
+function western(value){
+ var map={'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9','۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9'};
+ var text=String(value==null?'':value).replace(/[٠-٩۰-۹]/g,function(d){return map[d]||d;}).replace(/,/g,'').trim();
+ var n=Number(text);return Number.isFinite(n)?n:null;
+}
+function parseTimestamp(value){
+ if(value==null||value==='')return null;
+ if(typeof value==='number'){if(!Number.isFinite(value))return null;return value<1e12?value*1000:value;}
+ var numeric=Number(value);if(Number.isFinite(numeric))return numeric<1e12?numeric*1000:numeric;
+ var parsed=Date.parse(String(value));return Number.isFinite(parsed)?parsed:null;
+}
+function quoteData(payload){
+ if(payload==null)return null;
+ if(typeof payload==='number'||typeof payload==='string'){var simple=western(payload);return simple===null?null:{price:simple,symbol:currentSymbol,direction:null,sourceTimestamp:null};}
+ var candidates=[payload.price,payload.last,payload.close,payload.value,payload.ltp,payload.LTP];
+ if(payload.quote)candidates.push(payload.quote.price,payload.quote.last,payload.quote.close,payload.quote.ltp,payload.quote.LTP);
+ if(payload.data)candidates.push(payload.data.price,payload.data.last,payload.data.close,payload.data.ltp,payload.data.LTP);
+ var price=null;for(var i=0;i<candidates.length;i++){var n=western(candidates[i]);if(n!==null&&n>0){price=n;break;}}
+ if(price===null)return null;
+ var symbol=String(payload.symbol||(payload.quote&&payload.quote.symbol)||(payload.data&&payload.data.symbol)||currentSymbol||'SYMBOL').trim().toUpperCase();
+ var direction=String(payload.direction||(payload.quote&&payload.quote.direction)||(payload.data&&payload.data.direction)||'').trim().toUpperCase();
+ if(direction!=='UP'&&direction!=='DOWN')direction=null;
+ var sourceTimestamp=parseTimestamp(payload.observedAt||payload.observed_at||payload.timestamp||payload.time||payload.ts||(payload.quote&&(payload.quote.observedAt||payload.quote.timestamp||payload.quote.time||payload.quote.ts))||(payload.data&&(payload.data.observedAt||payload.data.timestamp||payload.data.time||payload.data.ts)));
+ return{price:price,symbol:symbol,direction:direction,sourceTimestamp:sourceTimestamp};
+}
+function formatPrice(price){
+ var p=Number(price);if(!Number.isFinite(p))return'--';
+ var places=Math.abs(p)>=100?3:Math.abs(p)>=1?4:6;
+ return p.toFixed(places).replace(/0+$/,'').replace(/\.$/,'');
+}
+function paintBoard(online,quote,direction){
+ var symbol=board.querySelector('.symbol'),price=board.querySelector('.price'),state=board.querySelector('.state');
+ if(online&&quote){
+  board.dataset.mode=direction==='DOWN'?'live-down':'live-up';
+  symbol.textContent=quote.symbol||'AMIBROKER';price.textContent=formatPrice(quote.price);state.textContent=(direction==='DOWN'?'▼ ':'▲ ')+'LIVE';
+ }else{
+  board.dataset.mode='waiting';symbol.textContent=currentSymbol==='WAITING'?'AMIBROKER':currentSymbol;price.textContent=lastPrice===null?'--':formatPrice(lastPrice);state.textContent='WAITING';
+ }
+}
+function nodeValue(node){
+ var primary=node.querySelector('tspan[data-v131-number-role="primary"]');
+ var values=[node.getAttribute('data-v131-display-value'),primary&&primary.textContent,node.textContent];
+ for(var i=0;i<values.length;i++){var n=western(values[i]);if(n!==null)return n;}return null;
+}
+function findPriceNode(doc,price){
+ var nodes=doc.querySelectorAll('.approved-cycle-number[data-tick]'),items=[];
+ for(var i=0;i<nodes.length;i++){var value=nodeValue(nodes[i]);if(value!==null)items.push({node:nodes[i],value:value});}
+ if(!items.length)return null;
+ items.sort(function(a,b){return a.value-b.value;});
+ var unique=[];for(var j=0;j<items.length;j++){if(!unique.length||Math.abs(items[j].value-unique[unique.length-1].value)>1e-9)unique.push(items[j]);}
+ var steps=[];for(var k=1;k<unique.length;k++){var delta=unique[k].value-unique[k-1].value;if(delta>1e-9)steps.push(delta);}steps.sort(function(a,b){return a-b;});
+ var fallbackStep=steps.length?steps[Math.floor(steps.length/2)]:1;
+ if(price<unique[0].value||price>=unique[unique.length-1].value+fallbackStep)return null;
+ var low=0,high=unique.length-1;while(low<=high){var mid=(low+high)>>1;if(unique[mid].value<=price)low=mid+1;else high=mid-1;}
+ return unique[Math.max(0,high)].node;
+}
+function matchingPath(doc,node){
+ var tick=String(node.getAttribute('data-tick')||''),paths=doc.querySelectorAll('#v131CellColorLayer path[data-v131-cell-key]');
+ for(var i=0;i<paths.length;i++){var key=String(paths[i].getAttribute('data-v131-cell-key')||'');if(key.slice(-(tick.length+1))==='|'+tick)return paths[i];}
+ var x=Number(node.getAttribute('x')),y=Number(node.getAttribute('y'));if(!Number.isFinite(x)||!Number.isFinite(y))return null;
+ var targetAngle=Math.atan2(y-1800,x-2200)*180/Math.PI,targetRadius=Math.hypot(x-2200,y-1800),best=null,bestScore=Infinity;
+ for(var j=0;j<paths.length;j++){try{var box=paths[j].getBBox(),px=box.x+box.width/2,py=box.y+box.height/2;var angle=Math.atan2(py-1800,px-2200)*180/Math.PI,radius=Math.hypot(px-2200,py-1800);var da=Math.abs(angle-targetAngle);da=Math.min(da,360-da);var score=da*20+Math.abs(radius-targetRadius);if(score<bestScore){best=paths[j];bestScore=score;}}catch(error){}}
+ return best;
+}
+function removeOldOverlays(doc){if(!doc)return;['v484LivePriceCell','v486LivePriceCell','v490LivePriceCell','v491LivePriceCell'].forEach(function(id){var old=doc.getElementById(id);if(old)old.remove();});}
+function paintLiveCell(price,direction){
+ var doc=wheelDoc();if(!doc)return false;
+ var node=findPriceNode(doc,price);if(!node){removeOldOverlays(doc);lastCellValue=null;lastCellTick=null;return false;}
+ var source=matchingPath(doc,node);if(!source)return false;
+ var tick=String(node.getAttribute('data-tick')||''),color=direction==='DOWN'?RED:GREEN,existing=doc.getElementById('v491LivePriceCell');
+ if(existing&&existing.isConnected&&lastCellTick===tick&&existing.getAttribute('data-v491-direction')===direction){existing.setAttribute('data-v491-price',String(price));node.setAttribute('data-v491-live-price',String(price));lastCellValue=nodeValue(node);return true;}
+ removeOldOverlays(doc);
+ var overlay=source.cloneNode(false);overlay.id='v491LivePriceCell';overlay.removeAttribute('data-v131-cell-key');overlay.removeAttribute('data-state');overlay.setAttribute('pointer-events','none');overlay.setAttribute('aria-hidden','true');overlay.setAttribute('fill',color);overlay.setAttribute('fill-opacity','0.82');overlay.setAttribute('stroke',direction==='DOWN'?'#8B0B16':'#087A2E');overlay.setAttribute('stroke-width','3.5');overlay.setAttribute('stroke-opacity','1');overlay.setAttribute('data-v491-direction',direction);overlay.setAttribute('data-v491-price',String(price));overlay.style.setProperty('fill',color,'important');overlay.style.setProperty('fill-opacity','0.82','important');overlay.style.setProperty('opacity','1','important');overlay.style.setProperty('filter','drop-shadow(0 0 11px '+color+')','important');source.parentNode.appendChild(overlay);
+ node.setAttribute('data-v491-live-price',String(price));doc.documentElement.dataset.v491LivePrice=String(price);doc.documentElement.dataset.v491LiveDirection=direction;lastCellValue=nodeValue(node);lastCellTick=tick;paintCount+=1;return true;
+}
+function publishQuote(quote,direction){
+ var doc=wheelDoc();if(doc){doc.documentElement.dataset.amibrokerLive='true';doc.documentElement.dataset.amibrokerSymbol=quote.symbol;doc.documentElement.dataset.amibrokerPrice=String(quote.price);doc.documentElement.dataset.v491QuoteReceivedAt=String(Date.now());}
+ var r=root();if(!r)return;visit(r,function(candidate){try{if(candidate.defaultView)candidate.defaultView.postMessage({type:'tasi-xauusd-quote',symbol:quote.symbol,price:quote.price,direction:direction,observedAt:quote.sourceTimestamp||Date.now(),source:'v491-stable-live'},'*');}catch(error){}return null;},0);
+}
+function hideNestedStatus(){
+ var doc=controlDoc();if(!doc)return;
+ var style=doc.getElementById('v491HideOldLiveStatus');if(!style){style=doc.createElement('style');style.id='v491HideOldLiveStatus';style.textContent='#v482CleanLiveStatus,#v490LowLatencyStatus{display:none!important}';doc.head.appendChild(style);}
+}
+async function readEndpoint(url){
+ requestCount+=1;var controller=typeof AbortController==='function'?new AbortController():null;var timeout=setTimeout(function(){try{if(controller)controller.abort();}catch(error){}},FETCH_TIMEOUT_MS);
+ try{var response=await fetch(url+(url.indexOf('?')<0?'?':'&')+'_v491='+Date.now(),{method:'GET',mode:'cors',cache:'no-store',credentials:'omit',headers:{'Accept':'application/json','Cache-Control':'no-cache'},signal:controller?controller.signal:undefined});if(!response.ok)throw new Error('HTTP '+response.status);return quoteData(await response.json());}finally{clearTimeout(timeout);}
+}
+async function getQuote(){
+ var urls=activeEndpoint?[activeEndpoint].concat(ENDPOINTS.filter(function(url){return url!==activeEndpoint;})):ENDPOINTS.slice();
+ for(var i=0;i<urls.length;i++){try{var quote=await readEndpoint(urls[i]);if(quote&&quote.price!==null){activeEndpoint=urls[i];return quote;}}catch(error){errorCount+=1;}}
+ return null;
+}
+function patchNestedPollWhenGridLocked(){
+ if(nestedPollPatched||lastQuote===null)return;
+ var r=root();if(!r)return;
+ visit(r,function(doc){
+  var win=doc.defaultView;if(!win||typeof win.__auditV482CleanAmiBroker!=='function'||win.__v491NestedFetchPatched)return null;
+  var audit=null;try{audit=win.__auditV482CleanAmiBroker();}catch(error){}
+  if(!audit||!audit.gridLocked)return null;
+  var nativeFetch=win.fetch.bind(win);
+  win.__v491OriginalFetch=nativeFetch;
+  win.fetch=function(resource,options){
+   var url=String(resource&&resource.url?resource.url:resource||'');
+   if(/127\.0\.0\.1:8770\/(quote|live_quote\.json)/i.test(url)&&lastQuote){
+    var body=JSON.stringify({symbol:lastQuote.symbol,price:lastQuote.price,direction:lastDirection,observedAt:lastQuote.sourceTimestamp||Date.now()});
+    return Promise.resolve(new win.Response(body,{status:200,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}}));
+   }
+   return nativeFetch(resource,options);
+  };
+  win.__v491NestedFetchPatched=true;nestedPollPatched=true;return doc;
+ },0);
+}
+async function poll(){
+ if(pollBusy)return;pollBusy=true;
+ try{
+  var quote=await getQuote();
+  if(quote&&quote.price!==null){
+   var direction=quote.direction;
+   if(direction!=='UP'&&direction!=='DOWN'){
+    if(lastPrice!==null&&quote.price<lastPrice)direction='DOWN';else if(lastPrice!==null&&quote.price>lastPrice)direction='UP';else direction=lastDirection||'UP';
+   }
+   lastDirection=direction;lastPrice=quote.price;lastQuote=quote;currentSymbol=quote.symbol||currentSymbol;lastGoodAt=Date.now();successCount+=1;
+   publishQuote(quote,direction);paintLiveCell(quote.price,direction);paintBoard(true,quote,direction);patchNestedPollWhenGridLocked();
+  }else if(Date.now()-lastGoodAt>OFFLINE_AFTER_MS){paintBoard(false,null,lastDirection);}
+ }catch(error){errorCount+=1;if(Date.now()-lastGoodAt>OFFLINE_AFTER_MS)paintBoard(false,null,lastDirection);}finally{pollBusy=false;}
+}
+function maintenance(){try{hideNestedStatus();if(lastPrice!==null)paintLiveCell(lastPrice,lastDirection);patchNestedPollWhenGridLocked();if(lastGoodAt&&Date.now()-lastGoodAt>OFFLINE_AFTER_MS)paintBoard(false,null,lastDirection);}catch(error){}}
+outer.addEventListener('load',function(){setTimeout(function(){hideNestedStatus();maintenance();poll();},250);});
+setInterval(poll,POLL_MS);setInterval(maintenance,900);poll();
+window.__auditV491AmiBrokerStableLive=function(){return{mode:lastGoodAt&&Date.now()-lastGoodAt<OFFLINE_AFTER_MS?'LIVE':'WAITING',symbol:currentSymbol,lastPrice:lastPrice,lastDirection:lastDirection,lastCellValue:lastCellValue,lastCellTick:lastCellTick,activeEndpoint:activeEndpoint,pollIntervalMs:POLL_MS,fetchTimeoutMs:FETCH_TIMEOUT_MS,requestCount:requestCount,successCount:successCount,errorCount:errorCount,paintCount:paintCount,nestedPollPatched:nestedPollPatched,priceBoardAlwaysVisible:true,gridRemainsFixed:true,liveCellMovesByPrice:true,upClockwiseGreen:true,downCounterClockwiseRed:true};};
+}());
+</script>
+</body>
+</html>
