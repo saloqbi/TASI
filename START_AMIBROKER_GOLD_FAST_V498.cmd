@@ -2,7 +2,7 @@
 title AmiBroker Gold Fast Link V498
 setlocal
 set "PSFILE=%TEMP%\amibroker_gold_bridge_v498_fast.ps1"
-set "WHEEL=https://htmlpreview.github.io/?https://github.com/saloqbi/TASI/blob/main/public/kawkabat-al-arqam-al-sihria-v496-gold-wheel-live-cell-verified.html"
+set "WHEEL=https://htmlpreview.github.io/?https://github.com/saloqbi/TASI/blob/fc712cdab2c1cbe08617368d4e649c70b02b1481/public/kawkabat-al-arqam-al-sihria-v496-gold-wheel-live-cell-verified.html"
 
 echo.
 echo ==========================================
